@@ -25,6 +25,9 @@ import {
   Layers
 } from 'lucide-react';
 import { ConstructionProject, ConstructionMilestone, NavigationTab } from '../../types';
+import { ProjectGovernanceTeamView } from '../governance/ProjectGovernanceTeamView';
+import { OrganizationManagementModal } from '../governance/OrganizationManagementModal';
+import { GovernanceAuditTrailModal } from '../governance/GovernanceAuditTrailModal';
 
 interface OwnerDashboardProps {
   project: ConstructionProject;
@@ -43,6 +46,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
     project.milestones.find(m => m.escrowStatus === 'Pending Sign-Off') || project.milestones[0] || null
   );
   const [activeCamAngle, setActiveCamAngle] = useState<'live_site' | 'finished_3d'>('live_site');
+  const [orgModalOpen, setOrgModalOpen] = useState(false);
+  const [auditModalOpen, setAuditModalOpen] = useState(false);
   const [decisionNotes, setDecisionNotes] = useState<{ [id: string]: 'Approved' | 'Rejected' | 'Pending' }>({
     'opt-1': 'Approved',
     'opt-2': 'Pending',
@@ -150,15 +155,31 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
 
           <div className="flex flex-wrap items-center gap-2.5">
             <button
+              onClick={() => setOrgModalOpen(true)}
+              className="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition flex items-center gap-2 shadow-sm"
+              title="Manage legal organizations & project governance"
+            >
+              <Building2 className="w-4 h-4" />
+              <span>Organizations & Portfolio</span>
+            </button>
+            <button
+              onClick={() => setAuditModalOpen(true)}
+              className="px-3 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-800 transition flex items-center gap-1.5"
+              title="View governance audit ledger"
+            >
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
+              <span>Audit Trail</span>
+            </button>
+            <button
               onClick={() => onNavigateTab('finished_render')}
-              className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition flex items-center gap-2 shadow-sm"
+              className="px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-800 transition flex items-center gap-2"
             >
               <Eye className="w-4 h-4" />
-              <span>360° Finished BIM Model</span>
+              <span className="hidden sm:inline">360° BIM</span>
             </button>
             <button
               onClick={onOpenAdvisorModal}
-              className="px-4 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-800 transition flex items-center gap-2"
+              className="px-3.5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-semibold text-xs border border-zinc-200 dark:border-zinc-800 transition flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
               <span>AI Director Brief</span>
@@ -186,6 +207,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Project Governance Team & Vacancies Matrix (Part D & E) */}
+      <ProjectGovernanceTeamView 
+        project={project} 
+        isOwnerView={true} 
+      />
 
       {/* 4 Core Financial & Asset Performance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -673,6 +700,23 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Organization Governance & Portfolio Modal */}
+      <OrganizationManagementModal
+        isOpen={orgModalOpen}
+        onClose={() => setOrgModalOpen(false)}
+        onProjectCreated={(newProj) => {
+          onUpdateProject?.(newProj);
+        }}
+      />
+
+      {/* Project Governance Audit Trail Modal */}
+      <GovernanceAuditTrailModal
+        isOpen={auditModalOpen}
+        onClose={() => setAuditModalOpen(false)}
+        projectId={project.id}
+        projectName={project.name}
+      />
     </div>
   );
 };

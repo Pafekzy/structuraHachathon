@@ -385,14 +385,39 @@ export const VisualInspectionAI: React.FC<VisualInspectionAIProps> = ({
               </div>
 
               {selectedPhoto.aiAnalysis && (
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  {selectedPhoto.aiAnalysis.complianceScore}% Compliance
-                </span>
+                selectedPhoto.aiAnalysis.complianceScore !== null && selectedPhoto.aiAnalysis.complianceScore !== undefined ? (
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    {selectedPhoto.aiAnalysis.complianceScore}% Preliminary Score
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                    Human Review Required
+                  </span>
+                )
               )}
+            </div>
+
+            {/* Mandatory Governance Notice */}
+            <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/20 text-[10px] text-blue-800 dark:text-blue-300 flex items-center justify-between">
+              <span>Governance Status: AI-Assisted Advisory</span>
+              <span className="text-zinc-500 dark:text-zinc-400">Formal Sign-Off Requires Licensed QA/QC Auditor</span>
             </div>
 
             {selectedPhoto.aiAnalysis ? (
               <div className="space-y-4 text-xs">
+                {/* Fallback warning if AI was unavailable */}
+                {selectedPhoto.aiAnalysis.overallHealth === 'HUMAN_REVIEW_REQUIRED' && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-xs">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>AI Vision Analysis Unavailable</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed">
+                      In accordance with Structura Engineering Governance, structural compliance scores and stage approvals cannot be fabricated. A physical audit by a certified Structural QA/QC Engineer is required.
+                    </p>
+                  </div>
+                )}
+
                 {/* Executive Summary */}
                 <div className="bg-zinc-50 dark:bg-zinc-900/60 p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block">
@@ -409,14 +434,18 @@ export const VisualInspectionAI: React.FC<VisualInspectionAIProps> = ({
                     Detected Structural & Architectural Elements
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {selectedPhoto.aiAnalysis.detectedElements.map((el, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 text-[11px] font-medium"
-                      >
-                        {el}
-                      </span>
-                    ))}
+                    {selectedPhoto.aiAnalysis.detectedElements.length > 0 ? (
+                      selectedPhoto.aiAnalysis.detectedElements.map((el, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 text-[11px] font-medium"
+                        >
+                          {el}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-zinc-500 text-[11px] italic">No automated detections — manual site inspection pending.</span>
+                    )}
                   </div>
                 </div>
 
@@ -428,7 +457,7 @@ export const VisualInspectionAI: React.FC<VisualInspectionAIProps> = ({
                   {selectedPhoto.aiAnalysis.defectFindings.length === 0 ? (
                     <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <span>Zero structural non-conformances detected. Approved for stage sign-off.</span>
+                      <span>Preliminary vision check clear. Physical inspection required for statutory sign-off.</span>
                     </div>
                   ) : (
                     <div className="space-y-2">

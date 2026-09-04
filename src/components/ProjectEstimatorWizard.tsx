@@ -20,7 +20,9 @@ import {
   LandSpecifications, 
   FloorPlanSpecifications, 
   MaterialSpecifications, 
-  ConstructionProject 
+  ConstructionProject,
+  EstimateAndProposeResponse,
+  EstimateSpecsPayload
 } from '../types';
 
 interface ProjectEstimatorWizardProps {
@@ -76,7 +78,8 @@ export const ProjectEstimatorWizard: React.FC<ProjectEstimatorWizardProps> = ({
   });
 
   const [isEstimating, setIsEstimating] = useState(false);
-  const [estimationResult, setEstimationResult] = useState<any>(null);
+  const [estimationError, setEstimationError] = useState<string | null>(null);
+  const [estimationResult, setEstimationResult] = useState<EstimateAndProposeResponse | null>(null);
 
   // Architectural Archetypes for Finished Building Render preview
   const buildingStyleGallery: Record<string, { image: string; prompt: string; desc: string }> = {
@@ -109,8 +112,11 @@ export const ProjectEstimatorWizard: React.FC<ProjectEstimatorWizardProps> = ({
 
   const handleRunEstimation = async () => {
     setIsEstimating(true);
+    setEstimationError(null);
     try {
-      const payload = {
+      const payload: EstimateSpecsPayload = {
+        projectName,
+        location,
         landArea: landSpecs.plotAreaSqm,
         grossFloorArea: floorPlanSpecs.grossFloorAreaSqm,
         floors: floorPlanSpecs.floors,
@@ -128,19 +134,26 @@ export const ProjectEstimatorWizard: React.FC<ProjectEstimatorWizardProps> = ({
         },
       };
 
-      const res = await fetch('/api/ai/estimate-specs', {
+      const res = await fetch('/api/projects/estimate-and-propose', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (data.success && data.estimation) {
-        setEstimationResult(data.estimation);
-        setStep(4);
+      if (!res.ok) {
+        throw new Error(`Estimation service error (${res.status}): ${res.statusText}`);
       }
-    } catch (err) {
+
+      const data: EstimateAndProposeResponse = await res.json();
+      if (data.success && data.calculatedBudget) {
+        setEstimationResult(data);
+        setStep(4);
+      } else {
+        throw new Error(data.error || 'Server did not return calculated budget');
+      }
+    } catch (err: any) {
       console.error('Failed to run AI estimation:', err);
+      setEstimationError(err.message || 'Failed to connect to estimation service. Please check network.');
     } finally {
       setIsEstimating(false);
     }
@@ -773,6 +786,14 @@ export const ProjectEstimatorWizard: React.FC<ProjectEstimatorWizardProps> = ({
                 </div>
               </div>
 
+              {/* Error Banner if calculation fails */}
+              {estimationError && (
+                <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-xs flex items-center gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>{estimationError}</span>
+                </div>
+              )}
+
               <div className="flex justify-between pt-3">
                 <button
                   onClick={() => setStep(2)}
@@ -804,6 +825,17 @@ export const ProjectEstimatorWizard: React.FC<ProjectEstimatorWizardProps> = ({
           {/* STEP 4: Calculated Estimate & Bill of Quantities Result */}
           {step === 4 && estimationResult && (
             <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-6 shadow-sm space-y-6 transition-colors duration-200">
+              {/* Engineering Governance Notice */}
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-900 dark:text-blue-300">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  AI-Assisted Preliminary Cost Model
+                </span>
+                <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">
+                  Subject to Chartered Quantity Surveyor & Structural Engineer Verification
+                </span>
+              </div>
+
               <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
                 <div className="flex items-center gap-2">
                   <Calculator className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />

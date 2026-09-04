@@ -18,6 +18,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { ConstructionProject, NavigationTab } from '../../types';
+import { PendingInvitationsBanner } from '../governance/PendingInvitationsBanner';
 
 interface StructuralQADashboardProps {
   project: ConstructionProject;
@@ -93,6 +94,9 @@ export const StructuralQADashboard: React.FC<StructuralQADashboardProps> = ({
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
+      {/* Pending Project Governance Appointment Invitations */}
+      <PendingInvitationsBanner />
+
       {/* Header Banner - Structural QA/QC Engineering Control Portal */}
       <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-7 shadow-sm transition-colors duration-200">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

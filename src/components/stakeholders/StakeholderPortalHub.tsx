@@ -9,14 +9,18 @@ import {
   CheckCircle2, 
   Clock, 
   Lock, 
-  KeyRound,
-  Check,
-  Building,
-  Sparkles,
-  Fingerprint,
-  LogIn
+  KeyRound, 
+  Check, 
+  Building, 
+  Sparkles, 
+  Fingerprint, 
+  LogIn,
+  Sliders,
+  AlertTriangle,
+  UserCheck
 } from 'lucide-react';
 import { ConstructionProject, NavigationTab, UserRole } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 interface StakeholderPortalHubProps {
   project: ConstructionProject;
@@ -34,6 +38,14 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
   onOpenAdvisorModal,
 }) => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+
+  const { 
+    userProfile, 
+    userRole, 
+    isDeveloperDemoMode, 
+    toggleDeveloperDemoMode, 
+    setDeveloperActiveRole 
+  } = useAuth();
 
   const stakeholders: Array<{
     id: UserRole;
@@ -163,7 +175,11 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
   ];
 
   const handleEnterSingleRole = (role: UserRole, targetTab: NavigationTab) => {
+    if (!isDeveloperDemoMode && role !== userRole) {
+      return;
+    }
     onChangeRole(role);
+    setDeveloperActiveRole(role);
     onNavigateTab(targetTab);
   };
 
@@ -186,11 +202,11 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
-            Select Your Role to Enter Portal
+            Single-Role Governance Gateway
           </h1>
           
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-            Please choose your specific professional identity. Once authenticated, your session will be locked exclusively to that single stakeholder portal with tailored metrics, zero cross-role access leakage, and distinct governance permissions.
+            Your session is authenticated under your registered professional identity. Under Structura governance rules, each stakeholder is locked to their authorized portal to guarantee fiduciary separation and strict accountability.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-slate-400">
@@ -210,6 +226,47 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
         </div>
       </div>
 
+      {/* Governance Accountability & Developer Demo Mode Control Bar */}
+      <div className={`p-4 rounded-2xl border transition-all ${
+        isDeveloperDemoMode 
+          ? 'bg-amber-500/10 border-amber-500/40 text-slate-800 dark:text-slate-200' 
+          : 'bg-slate-100 dark:bg-[#0a1829] border-slate-200 dark:border-[#182c44] text-slate-700 dark:text-slate-300'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className={`p-2 rounded-xl shrink-0 ${isDeveloperDemoMode ? 'bg-amber-500 text-slate-950' : 'bg-slate-200 dark:bg-[#13253b] text-slate-600 dark:text-slate-300'}`}>
+              <Sliders className="w-4 h-4" />
+            </div>
+            <div className="text-xs space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="font-bold uppercase tracking-wider">
+                  {isDeveloperDemoMode ? 'DEVELOPER DEMO MODE ACTIVE' : 'AUTHENTICATED GOVERNANCE ACTIVE'}
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/10 dark:bg-white/10 font-semibold">
+                  Registered: {userRole}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                {isDeveloperDemoMode
+                  ? 'Role impersonation unlocked for rapid developer testing across all 4 stakeholder views.'
+                  : 'Role impersonation is disabled in normal operation. You can only enter your declared stakeholder portal.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={toggleDeveloperDemoMode}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
+              isDeveloperDemoMode
+                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm'
+                : 'bg-slate-200 dark:bg-[#162e4a] hover:bg-slate-300 dark:hover:bg-[#1f3f66] text-slate-700 dark:text-slate-200'
+            }`}
+          >
+            {isDeveloperDemoMode ? 'Disable Demo Mode' : 'Toggle Developer Demo Mode'}
+          </button>
+        </div>
+      </div>
+
       {/* 4 Dedicated Stakeholder Selection Cards */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -224,10 +281,19 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {stakeholders.map((sh) => {
+            const isUserRole = sh.id === userRole;
+            const isAuthorized = isDeveloperDemoMode || isUserRole;
+
             return (
               <div
                 key={sh.id}
-                className={`bg-white dark:bg-[#091524] border rounded-2xl p-6 sm:p-7 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between group border-slate-200 dark:border-[#162c46] ${sh.accentGlow}`}
+                className={`bg-white dark:bg-[#091524] border rounded-2xl p-6 sm:p-7 shadow-sm hover:shadow-xl transition-all duration-200 flex flex-col justify-between group ${
+                  isUserRole 
+                    ? 'border-amber-500/60 dark:border-amber-500/60 shadow-amber-500/5 ring-1 ring-amber-500/30' 
+                    : !isAuthorized 
+                      ? 'border-slate-200 dark:border-[#162c46] opacity-80' 
+                      : 'border-slate-200 dark:border-[#162c46]'
+                } ${sh.accentGlow}`}
               >
                 <div className="space-y-5">
                   {/* Top Role Header */}
@@ -241,6 +307,12 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
                           <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border ${sh.badgeColor}`}>
                             {sh.id}
                           </span>
+                          {isUserRole && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                              <UserCheck className="w-3 h-3" />
+                              <span>YOUR REGISTERED ROLE</span>
+                            </span>
+                          )}
                         </div>
                         <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mt-1 group-hover:text-amber-500 transition-colors">
                           {sh.title}
@@ -302,14 +374,29 @@ export const StakeholderPortalHub: React.FC<StakeholderPortalHubProps> = ({
 
                 {/* Launch Button */}
                 <div className="pt-5 mt-4 border-t border-slate-100 dark:border-[#162c46]">
-                  <button
-                    onClick={() => handleEnterSingleRole(sh.id, sh.tabTarget)}
-                    className="w-full py-3 rounded-xl bg-[#0B192C] dark:bg-amber-500 text-white dark:text-slate-950 hover:bg-[#122c4a] dark:hover:bg-amber-400 font-extrabold text-xs transition duration-150 flex items-center justify-center gap-2 shadow-md group/btn"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span>{sh.actionLabel}</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                  </button>
+                  {isAuthorized ? (
+                    <button
+                      onClick={() => handleEnterSingleRole(sh.id, sh.tabTarget)}
+                      className={`w-full py-3 rounded-xl font-extrabold text-xs transition duration-150 flex items-center justify-center gap-2 shadow-md group/btn ${
+                        isUserRole
+                          ? 'bg-[#0B192C] dark:bg-amber-500 text-white dark:text-slate-950 hover:bg-[#122c4a] dark:hover:bg-amber-400'
+                          : 'bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/30 border border-amber-500/40'
+                      }`}
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>{isUserRole ? 'Enter Your Authorized Portal' : `Enter (Demo Mode: ${sh.id})`}</span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="w-full py-3 rounded-xl bg-slate-100 dark:bg-[#0c1827] text-slate-400 dark:text-slate-500 font-bold text-xs flex items-center justify-center gap-2 border border-slate-200 dark:border-[#182c44] cursor-not-allowed"
+                      title={`Your account is registered as ${userRole}. Activate Developer Demo Mode to test this view.`}
+                    >
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Locked (Authorized as {userRole})</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

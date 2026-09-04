@@ -107,8 +107,15 @@ export const BudgetVarianceEscrow: React.FC<BudgetVarianceEscrowProps> = ({
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Owner Milestone Escrow Payout Gateway</h3>
-              <p className="text-xs text-zinc-500">Verify engineering sign-off certificates before releasing contractual funds.</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-white">Owner Milestone Escrow Payout Gateway</h3>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 uppercase tracking-wider">
+                  SANDBOX DEMO
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500">
+                Simulated multi-sig escrow release for contractor milestone claims. No live banking settlement initiated in sandbox mode.
+              </p>
             </div>
           </div>
 
@@ -162,18 +169,34 @@ export const BudgetVarianceEscrow: React.FC<BudgetVarianceEscrowProps> = ({
                 <span>Mandatory Inspection Gateways & Engineering Certificates</span>
               </h5>
               <div className="space-y-2">
-                {selectedMilestone.certificationsRequired.map((cert, idx) => (
-                  <div
-                    key={idx}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs gap-1.5"
-                  >
-                    <span className="text-zinc-800 dark:text-zinc-200 font-medium">{cert}</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 shrink-0">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Verified & Cleared</span>
-                    </span>
-                  </div>
-                ))}
+                {selectedMilestone.certificationsRequired.map((cert, idx) => {
+                  const isCompleted = selectedMilestone.status === 'Completed' || selectedMilestone.escrowStatus === 'Released';
+                  const isPending = selectedMilestone.escrowStatus === 'Pending Sign-Off';
+
+                  return (
+                    <div
+                      key={idx}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs gap-1.5"
+                    >
+                      <span className="text-zinc-800 dark:text-zinc-200 font-medium">{cert}</span>
+                      {isCompleted ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1 shrink-0">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Filed & Cleared (Sandbox Demo)</span>
+                        </span>
+                      ) : isPending ? (
+                        <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1 shrink-0">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Pending Auditor Field Sign-Off</span>
+                        </span>
+                      ) : (
+                        <span className="text-zinc-500 font-medium flex items-center gap-1 shrink-0">
+                          <span>Inspection Hold Point (Pending)</span>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -203,28 +226,38 @@ export const BudgetVarianceEscrow: React.FC<BudgetVarianceEscrowProps> = ({
             </div>
 
             {selectedMilestone.payoutApproved ? (
-              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold text-center flex items-center justify-center gap-2 min-h-[40px]">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                <span>Disbursement Approved & Released</span>
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold text-center flex flex-col items-center justify-center gap-1 min-h-[40px]">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <span>Sandbox Disbursement Simulated</span>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-normal">
+                  Demo Protocol — No live banking transfer or financial liability initiated.
+                </span>
               </div>
             ) : (
-              <button
-                onClick={() => handleApproveEscrowPayout(selectedMilestone.id)}
-                disabled={signingOffId === selectedMilestone.id}
-                className="w-full py-2.5 rounded-lg bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm disabled:opacity-50 min-h-[40px]"
-              >
-                {signingOffId === selectedMilestone.id ? (
-                  <>
-                    <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    <span>Signing Off & Releasing Escrow...</span>
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-4 h-4" />
-                    <span>Approve Escrow Release (${selectedMilestone.contractorClaimUSD.toLocaleString()})</span>
-                  </>
-                )}
-              </button>
+              <div className="space-y-1.5">
+                <button
+                  onClick={() => handleApproveEscrowPayout(selectedMilestone.id)}
+                  disabled={signingOffId === selectedMilestone.id}
+                  className="w-full py-2.5 rounded-lg bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 font-semibold text-xs flex items-center justify-center gap-2 transition shadow-sm disabled:opacity-50 min-h-[40px]"
+                >
+                  {signingOffId === selectedMilestone.id ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span>Simulating Sandbox Escrow Release...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-4 h-4" />
+                      <span>Simulate Escrow Release (${selectedMilestone.contractorClaimUSD.toLocaleString()}) [Sandbox Demo]</span>
+                    </>
+                  )}
+                </button>
+                <p className="text-[10px] text-zinc-400 text-center">
+                  Sandbox simulation only. Production requires multi-party bank escrow authorization.
+                </p>
+              </div>
             )}
           </div>
         </div>

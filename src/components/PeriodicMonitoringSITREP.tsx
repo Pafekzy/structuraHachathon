@@ -342,6 +342,17 @@ export const PeriodicMonitoringSITREP: React.FC<PeriodicMonitoringSITREPProps> =
                 </div>
               </div>
 
+              {/* Engineering Governance Notice */}
+              <div className="p-2.5 rounded-lg bg-blue-500/5 border border-blue-500/20 text-[11px] text-blue-900 dark:text-blue-300 flex items-center justify-between">
+                <span className="font-semibold flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  AI-Assisted Executive SITREP Briefing
+                </span>
+                <span className="text-zinc-500 dark:text-zinc-400 text-[10px]">
+                  Requires Senior Project Director verification prior to formal distribution
+                </span>
+              </div>
+
               {/* Executive Headline Callout */}
               <div className="bg-zinc-50 dark:bg-zinc-900/60 border-l-4 border-zinc-950 dark:border-white p-4 rounded-r-lg">
                 <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider block mb-1">

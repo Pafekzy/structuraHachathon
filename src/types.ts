@@ -85,7 +85,7 @@ export interface SitePhotoInspection {
   caption: string;
   inspectedBy: string;
   aiAnalysis?: {
-    overallHealth: 'Optimal' | 'Caution - Minor Deviations' | 'Critical - Immediate Action Required';
+    overallHealth: 'Optimal' | 'Caution - Minor Deviations' | 'Critical - Immediate Action Required' | 'HUMAN_REVIEW_REQUIRED';
     completionEstimatePercent: number;
     detectedElements: string[];
     complianceScore: number;
@@ -97,6 +97,9 @@ export interface SitePhotoInspection {
     }>;
     safetyObservations: string[];
     executiveSummary: string;
+    isAiAssisted?: boolean;
+    aiStatus?: string;
+    disclaimer?: string;
     varianceAlert?: {
       hasAlert: boolean;
       varianceType: string;
@@ -193,4 +196,259 @@ export interface ConstructionProject {
     targetProgress: number;
     actualProgress: number;
   }>;
+
+  // Organization & Governance Fields (Sprint 03)
+  organizationId?: string;
+  projectType?: string;
+  description?: string;
+  currency?: string;
+  currentStage?: string;
+  ownerUserId?: string;
+  status?: 'ACTIVE' | 'ARCHIVED' | 'PLANNING';
+}
+
+// Estimation and Cost Takeoff Types
+export interface CalculatedTakeoff {
+  concreteVolumeM3: number;
+  rebarSteelTonnes: number;
+  glazingAreaM2: number;
+  drywallAreaM2: number;
+  estimatedLaborHours: number;
+  estimatedDurationMonths: number;
+}
+
+export interface CalculatedBudget {
+  substructure: number;
+  superstructure: number;
+  enclosureGlazing: number;
+  roofing: number;
+  mepHvac: number;
+  interiorFitout: number;
+  directSubtotal: number;
+  prelimsAndSupervision: number;
+  contractorMargin: number;
+  contingency: number;
+  totalEstimatedCost: number;
+  costPerSqm: number;
+  takeoff: CalculatedTakeoff;
+}
+
+export interface AiEstimationInsights {
+  architecturalSummary: string;
+  valueEngineeringNotes: string[];
+  riskFactors: string[];
+  renderingVisualPrompt: string;
+  recommendedPhases?: Array<{ name: string; durationWeeks: number; costSharePercent: number }>;
+  constructionMethodology?: string;
+  isAiAssisted?: boolean;
+  disclaimer?: string;
+}
+
+export interface EstimateAndProposeResponse {
+  success: boolean;
+  calculatedBudget: CalculatedBudget;
+  aiInsights: AiEstimationInsights;
+  error?: string;
+}
+
+export interface EstimateSpecsPayload {
+  projectName?: string;
+  location?: string;
+  landArea: number;
+  grossFloorArea: number;
+  floors: number;
+  buildingStyle: string;
+  structuralCore: string;
+  foundationType: string;
+  facadeType: string;
+  roofType: string;
+  mepTier: string;
+  interiorGrade: string;
+  amenities?: {
+    basement?: boolean;
+    pool?: boolean;
+    rooftop?: boolean;
+  };
+}
+
+// Structura Authentication & User Profile Domain Models (Sprint 02)
+export type PrimaryRole = 
+  | 'OWNER_CLIENT'
+  | 'SENIOR_PROJECT_DIRECTOR'
+  | 'GENERAL_CONTRACTOR'
+  | 'STRUCTURAL_QA_QC_AUDITOR';
+
+export type AccountStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+export type IdentityStatus = 'NOT_STARTED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
+export type ProfessionalVerificationStatus = 
+  | 'NOT_REQUIRED'
+  | 'NOT_STARTED'
+  | 'PENDING'
+  | 'VERIFIED'
+  | 'REJECTED'
+  | 'EXPIRED';
+
+export interface UserRoleDetails {
+  entityType?: 'Individual' | 'Organization';
+  country?: string;
+  city?: string;
+  organizationName?: string;
+  intendedUse?: 'Personal Development' | 'Real Estate Development' | 'Corporate Project' | 'Public / Institutional Project' | 'Other';
+  yearsExperience?: number;
+  primaryDiscipline?: string;
+  professionalBody?: string;
+  registrationNumber?: string;
+  companyName?: string;
+  yearsOperating?: number;
+  specialties?: string[];
+}
+
+export interface UserProfile {
+  id: string;
+  authUserId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  primaryRole: PrimaryRole;
+  accountStatus: AccountStatus;
+  identityStatus: IdentityStatus;
+  professionalVerificationStatus: ProfessionalVerificationStatus;
+  roleDetails?: UserRoleDetails;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthSessionState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: {
+    uid: string;
+    email: string;
+    displayName?: string;
+  } | null;
+  userProfile: UserProfile | null;
+  idToken: string | null;
+  authProviderType: 'firebase' | 'server_sandbox';
+  isDeveloperDemoMode: boolean;
+}
+
+// ==========================================
+// Organization Governance Domain Models (Sprint 03)
+// ==========================================
+
+export type OrganizationType = 
+  | 'INDIVIDUAL_DEVELOPER'
+  | 'REAL_ESTATE_DEVELOPER'
+  | 'CORPORATE'
+  | 'INSTITUTIONAL'
+  | 'PUBLIC_SECTOR'
+  | 'OTHER';
+
+export type OrganizationVerificationStatus = 
+  | 'NOT_STARTED'
+  | 'PENDING'
+  | 'VERIFIED'
+  | 'REJECTED';
+
+export type OwnerAuthorityStatus = 
+  | 'NOT_STARTED'
+  | 'PENDING'
+  | 'VERIFIED'
+  | 'REJECTED';
+
+export type OrganizationStatus = 
+  | 'ACTIVE'
+  | 'SUSPENDED'
+  | 'ARCHIVED';
+
+export interface Organization {
+  id: string;
+  name: string;
+  type: OrganizationType;
+  registrationNumber?: string;
+  jurisdiction: string;
+  country: string;
+  address?: string;
+  createdByUserId: string;
+  ownerUserId: string;
+  verificationStatus: OrganizationVerificationStatus;
+  ownerAuthorityStatus: OwnerAuthorityStatus;
+  status: OrganizationStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type OrganizationRole = 'OWNER_ADMIN' | 'MEMBER';
+export type MembershipStatus = 'ACTIVE' | 'INVITED' | 'SUSPENDED';
+
+export interface OrganizationMembership {
+  id: string;
+  organizationId: string;
+  userId: string;
+  organizationRole: OrganizationRole;
+  status: MembershipStatus;
+  invitedByUserId?: string;
+  invitedAt?: string;
+  acceptedAt?: string;
+  createdAt: string;
+}
+
+// ==========================================
+// Project Governance Appointments (Sprint 03)
+// ==========================================
+
+export type ProjectRole = 
+  | 'OWNER_CLIENT'
+  | 'SENIOR_PROJECT_DIRECTOR'
+  | 'GENERAL_CONTRACTOR'
+  | 'STRUCTURAL_QA_QC_AUDITOR';
+
+export type AppointmentStatus = 
+  | 'INVITED'
+  | 'ACCEPTED'
+  | 'DECLINED'
+  | 'ACTIVE'
+  | 'REVOKED'
+  | 'ENDED';
+
+export interface ProjectAppointment {
+  id: string;
+  projectId: string;
+  organizationId: string;
+  userId: string;
+  userEmail?: string;
+  userName?: string;
+  role: ProjectRole;
+  appointmentStatus: AppointmentStatus;
+  invitedByUserId: string;
+  invitedAt: string;
+  respondedAt?: string;
+  activatedAt?: string;
+  endedAt?: string;
+  reason?: string;
+}
+
+// ==========================================
+// Audit Event Domain Model (Sprint 03)
+// ==========================================
+
+export type AuditAction = 
+  | 'ORGANIZATION_CREATED'
+  | 'PROJECT_CREATED'
+  | 'PROJECT_INVITATION_SENT'
+  | 'PROJECT_INVITATION_ACCEPTED'
+  | 'PROJECT_INVITATION_DECLINED'
+  | 'PROJECT_APPOINTMENT_REVOKED';
+
+export interface AuditEvent {
+  id: string;
+  actorUserId: string;
+  organizationId?: string;
+  projectId?: string;
+  action: AuditAction;
+  entityType: string;
+  entityId: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
 }

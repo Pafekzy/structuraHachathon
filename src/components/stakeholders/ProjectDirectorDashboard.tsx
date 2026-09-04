@@ -23,6 +23,8 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { ConstructionProject, NavigationTab } from '../../types';
+import { PendingInvitationsBanner } from '../governance/PendingInvitationsBanner';
+import { ProjectGovernanceTeamView } from '../governance/ProjectGovernanceTeamView';
 
 interface ProjectDirectorDashboardProps {
   project: ConstructionProject;
@@ -120,6 +122,9 @@ export const ProjectDirectorDashboard: React.FC<ProjectDirectorDashboardProps> =
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
+      {/* Pending Project Governance Appointment Invitations */}
+      <PendingInvitationsBanner />
+
       {/* Header Banner - Senior Project Director Command Center */}
       <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-7 shadow-sm transition-colors duration-200">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

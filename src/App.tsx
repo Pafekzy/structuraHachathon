@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Navbar } from './components/Navbar';
 import { ExecutiveOverview } from './components/ExecutiveOverview';
 import { ProjectEstimatorWizard } from './components/ProjectEstimatorWizard';
@@ -20,6 +23,11 @@ import { AccessRestrictedView } from './components/AccessRestrictedView';
 import { SAMPLE_PROJECTS } from './data/sampleProjects';
 import { ConstructionProject, NavigationTab, UserRole } from './types';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { PublicHomePage } from './pages/PublicHomePage';
+import { AboutPage } from './pages/AboutPage';
+import { ServicesPage } from './pages/ServicesPage';
+import { ContactPage } from './pages/ContactPage';
+import { AuthPage } from './pages/AuthPage';
 
 const ROLE_PERMITTED_TABS: Record<UserRole, NavigationTab[]> = {
   'Owner / Client': [
@@ -83,7 +91,13 @@ function AppContent() {
   
   // Stakeholder Portal Hub is the landing page
   const [activeTab, setActiveTab] = useState<NavigationTab>('stakeholder_hub');
-  const [activeRole, setActiveRole] = useState<UserRole>('Owner / Client');
+  
+  // Real authenticated user role state from AuthContext
+  const { activeRole, userRole, setDeveloperActiveRole, isDeveloperDemoMode, idToken } = useAuth();
+  const setActiveRole = (role: UserRole) => {
+    setDeveloperActiveRole(role);
+  };
+
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
 
   // Smooth initial splash loader fade-out
@@ -93,6 +107,37 @@ function AppContent() {
     }, 550);
     return () => clearTimeout(timer);
   }, []);
+
+  // Fetch projects from backend governance service when authenticated
+  useEffect(() => {
+    if (!idToken) return;
+    const fetchBackendProjects = async () => {
+      try {
+        const res = await fetch('/api/projects', {
+          headers: {
+            'Authorization': `Bearer ${idToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (res.ok) {
+          const backendProjects = await res.json();
+          if (Array.isArray(backendProjects) && backendProjects.length > 0) {
+            setProjects((prev) => {
+              const map = new Map<string, ConstructionProject>();
+              backendProjects.forEach((p: ConstructionProject) => map.set(p.id, p));
+              prev.forEach((p) => {
+                if (!map.has(p.id)) map.set(p.id, p);
+              });
+              return Array.from(map.values());
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Could not fetch projects from server', e);
+      }
+    };
+    fetchBackendProjects();
+  }, [idToken]);
 
   // Sync to local storage whenever projects update
   useEffect(() => {
@@ -344,7 +389,35 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<PublicHomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/login" element={<AuthPage initialMode="login" />} />
+            <Route path="/signup" element={<AuthPage initialMode="signup" />} />
+            <Route 
+              path="/app" 
+              element={
+                <ProtectedRoute>
+                  <AppContent />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/app/*" 
+              element={
+                <ProtectedRoute>
+                  <AppContent />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
