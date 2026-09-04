@@ -10,5 +10,5 @@ dist/
 Thumbs.db
 
 # Developer Sandbox persistence
-data/
+/data/
 data/*.json
